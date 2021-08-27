@@ -5,7 +5,8 @@ import Footer from './Footer'
 import EditProfilePopup from './EditProfilePopup';
 import PopupWithForm from './PopupWithForm';
 import ImagePopup from './ImagePopup';
-import {api, signApi} from '../utils/api';
+import {api} from '../utils/api';
+import signApi from '../utils/auth'
 import Register from './Register';
 import { Route, Switch, Redirect, useHistory} from 'react-router-dom';
 import EditAvatarPopup from './EditAvatarPopup';
@@ -13,12 +14,14 @@ import { UserContext } from '../contexts/CurrentUserContext';
 import AddPlacePopup from './AddPlacePopup'
 import InfoTooltip from './InfoTooltip'
 import Login from './Login'
+import Spinner from './Spinner';
 import ProtectedRoute from './ProtectedRoute';
+
 
 function App() {
   
-  const [isEditProfilePopupOpen, setEditProfile] = React.useState(false);
-  const [isAddPlacePopupOpen, setAddPlacePopup] = React.useState(false);
+  const [isEditProfilePopupOpen, setEditProfile] = React.useState(false); //Учел замечание про нейминг функций, в дальнешем исправлю, просто это очень долго ;)
+  const [isAddPlacePopupOpen, setAddPlacePopup] = React.useState(false); 
   const [isEditAvatarPopupOpen, setAvatarPopup] = React.useState(false);
   const [isImagePopupOpen, setImagePopup] = React.useState(false);
   const [selectedCard, setSelectedCard] = React.useState(null);
@@ -33,7 +36,9 @@ function App() {
   const history = useHistory();
 
   React.useEffect(()=>{
-    let jwt = localStorage.getItem('jwt')
+    const jwt = localStorage.getItem('jwt')
+
+    loadData();
 
     if(!jwt){
       setIsLoading(false)
@@ -45,8 +50,6 @@ function App() {
 
       setEmail(res.data.email)
 
-      loadData()
-
       setLogIn(true)
 
       setIsLoading(false)
@@ -57,6 +60,17 @@ function App() {
 
   },[])
   
+  React.useEffect(() => {
+    const closeByEscape = (e) => {
+      if (e.key === 'Escape') {
+        closeAllPopups();
+      }
+    }
+
+    document.addEventListener('keydown', closeByEscape)
+    
+    return () => document.removeEventListener('keydown', closeByEscape)
+  }, [])
 
   function handleCardLike(card) {
     // Снова проверяем, есть ли уже лайк на этой карточке
@@ -86,14 +100,16 @@ function App() {
   function handleSignUpSubmit(email, password){
     signApi.signUp(email, password)
     .then(res => {
+
       setSignSucces(true);
-      setRegistrationPopup(true);
       
       
       history.push('/sign-in')
     })
     .catch(err => {
       setSignSucces(false)
+    })
+    .finally(() => {
       setRegistrationPopup(true);
     })
   }
@@ -121,20 +137,19 @@ function App() {
     
     signApi.signIn(email, password)
     .then(res => {
-      setLogIn(true)
+      setLogIn(true);
 
       setEmail(email);
 
-      localStorage.setItem('jwt', res.token)
+      localStorage.setItem('jwt', res.token);
 
-      loadData()
-
-      history.push('/')
+      history.push('/');
     })
     .catch(err => {
-      setSignSucces(false)
+      setSignSucces(false);
       setRegistrationPopup(true);
     })
+    
   }
 
 
@@ -217,7 +232,7 @@ function App() {
   return (
     <div className="page">
     <UserContext.Provider value={currentUser}>
-    {!isLoading && <>
+    {!isLoading ? <>
     <Switch>
       <ProtectedRoute 
           exact path='/'
@@ -241,9 +256,9 @@ function App() {
          <Login onSignIn = {handleSignInSubmit}/>  
       </Route>
       <Route>
-          {!loggedIn ? (<Redirect to="/" />) : (<Redirect to="/sign-up" />)}
+          {!loggedIn ? (<Redirect to="/" />) : (<Redirect to="/sign-in" />)}
       </Route>
-    </Switch></>}
+    </Switch></>:<Spinner />}
     <EditProfilePopup isOpen={isEditProfilePopupOpen} onClose={closeAllPopups} onUpdateUser={handleUpdateUser}/>  
     </UserContext.Provider>
     <EditAvatarPopup isOpen={isEditAvatarPopupOpen} onClose={closeAllPopups} onUpdateAvatar={handleUpdateAvatar}/>
