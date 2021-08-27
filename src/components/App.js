@@ -233,15 +233,15 @@ function App() {
           onCardDelete={handleCardDelete}
           onCardLike={handleCardLike}/>  
       <Route path='/sign-up'>
-        <Header isLoggedIn={loggedIn} email={email} onLogOut={handleLogOut}/>
+        <Header email={email} onLogOut={handleLogOut}/>
         <Register onSignUp = {handleSignUpSubmit}/>
       </Route>
       <Route path='/sign-in' >
-         <Header isLoggedIn={loggedIn} email={email} onLogOut={handleLogOut}/>
+         <Header email={email} onLogOut={handleLogOut}/>
          <Login onSignIn = {handleSignInSubmit}/>  
       </Route>
       <Route>
-          {!loggedIn ? (<Redirect to="/profile" />) : (<Redirect to="/sign-up" />)}
+          {!loggedIn ? (<Redirect to="/" />) : (<Redirect to="/sign-up" />)}
       </Route>
     </Switch></>}
     <EditProfilePopup isOpen={isEditProfilePopupOpen} onClose={closeAllPopups} onUpdateUser={handleUpdateUser}/>  
